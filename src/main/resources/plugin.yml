@@ -1,0 +1,17 @@
+name: MyAttribute
+version: 1.0-SNAPSHOT
+main: org.ThienDev.Main
+api-version: 1.21
+author: ThienNguyen
+description: Plugin quan ly thuoc tinh ho tro 1.21 va hook Fabled.
+commands:
+  MyAttribute:
+    description: Lenh chinh de quan ly thuoc tinh.
+    aliases: [Attribute, attr]
+    usage: /<command> help
+    permission: myattribute.admin
+
+permissions:
+  myattribute.admin:
+    description: Quyen quan tri vien cho MyAttribute.
+    default: op

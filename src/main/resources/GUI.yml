@@ -1,0 +1,11 @@
+menu:
+  title: "&8Chỉnh sửa thuộc tính"
+  size: 27
+  items:
+    example_item:
+      slot: 13
+      material: DIAMOND
+      name: "&bVật phẩm ví dụ"
+      lore:
+        - "&7Dòng 1"
+        - "&7Dòng 2"

@@ -1,0 +1,11 @@
+# Định nghĩa các bộ thuộc tính
+attributes:
+  warrior_pack:
+    health: 2
+    damage: 5
+    class-bonus:
+      warrior:
+        health: 3
+  tanker_pack:
+    health: 10
+    damage: 1
