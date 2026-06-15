@@ -11,8 +11,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 public class GuiListener implements Listener {
+
     private final Main plugin;
 
     public GuiListener(Main plugin) {
@@ -21,63 +24,117 @@ public class GuiListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        String rawTitle = plugin.getGuiManager().getGuiConfig().getString("menu.title");
-        if (rawTitle == null) return;
-
-        String title = ChatColor.translateAlternateColorCodes('&', rawTitle);
-        if (!event.getView().getTitle().equals(title)) return;
-
-        event.setCancelled(true);
         if (!(event.getWhoClicked() instanceof Player player)) return;
+
+        String rawTitle = plugin.getGuiManager().getGuiConfig().getString("menu.title");
+        if (rawTitle == null || rawTitle.isEmpty()) return;
+
+        // Lấy prefix tiêu đề để nhận diện GUI
+        String titlePrefix = ChatColor.translateAlternateColorCodes('&',
+                rawTitle.split("\\{points\\}")[0].trim());
+
+        if (!event.getView().getTitle().startsWith(titlePrefix)) return;
+
+        // Chặn mọi hành vi lấy item hoặc bỏ item vào GUI
+        event.setCancelled(true);
+
         if (event.getCurrentItem() == null) return;
 
         String attrId = plugin.getGuiManager().getAttributeIdAtSlot(event.getSlot());
         if (attrId != null) {
-            handleUpgrade(player, attrId);
+            // Xác định số lượng điểm muốn nâng dựa trên kiểu click
+            int amount = 1;
+            if (event.isShiftClick()) {
+                amount = event.isLeftClick() ? 100 : 1000;
+            } else if (event.isRightClick()) {
+                amount = 10;
+            }
+
+            // Gọi hàm xử lý nâng cấp với số lượng đã định
+            handleUpgrade(player, attrId, amount);
         }
     }
 
-    private void handleUpgrade(Player player, String attrId) {
-        PlayerData data = SkillAPI.getPlayerData(player);
-        if (data == null || data.getAttributePoints() < 1) {
-            player.sendMessage("§c[!] Bạn không đủ điểm AP!");
-            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent e) {
+        if (!(e.getPlayer() instanceof Player player)) return;
+
+        // Kiểm tra nếu là refresh thì thoát luôn, không trả đồ
+        if (plugin.getGuiManager().isReOpening(player.getUniqueId())) {
             return;
         }
 
-        // 1. Lấy Class từ Fabled
-        if (data.getMainClass() == null) {
-            player.sendMessage("§c[!] Bạn phải chọn Class trước!");
+        String rawTitle = plugin.getGuiManager().getGuiConfig().getString("menu.title");
+        if (rawTitle == null || rawTitle.isEmpty()) return;
+
+        String titlePrefix = ChatColor.translateAlternateColorCodes('&',
+                rawTitle.split("\\{points\\}")[0].trim());
+
+        if (e.getView().getTitle().startsWith(titlePrefix)) {
+            if (plugin.getConfig().getBoolean("gui.clear-inventory-on-open", false)) {
+                // Chỉ trả đồ khi thực sự đóng GUI (không phải click nâng điểm)
+                plugin.getGuiManager().restorePlayerInventory(player);
+            }
+        }
+    }
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent e) {
+        if (plugin.getConfig().getBoolean("gui.clear-inventory-on-open", false)) {
+            plugin.getGuiManager().restorePlayerInventory(e.getPlayer());
+        }
+    }
+
+    private void handleUpgrade(Player player, String attrId, int amount) {
+        boolean isSkillAPI = org.bukkit.Bukkit.getPluginManager().isPluginEnabled("SkillAPI");
+        boolean isMMOCore = org.bukkit.Bukkit.getPluginManager().isPluginEnabled("MMOCore");
+
+        int currentAP = 0;
+
+        // Lấy điểm từ nguồn khả dụng
+        if (isSkillAPI) {
+            currentAP = org.ThienDev.Utils.SkillAPIWrapper.getPoints(player);
+        } else if (isMMOCore) {
+            currentAP = org.ThienDev.Utils.MMOCoreWrapper.getPoints(player);
+        }
+
+        if (currentAP <= 0) {
+            player.sendMessage("§c[!] Bạn không còn điểm tiềm năng (AP) để nâng cấp!");
+            player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
-        String className = data.getMainClass().getData().getName().toLowerCase();
 
-        // 2. Lấy Config của thuộc tính
-        ConfigurationSection attrConfig = plugin.getConfig().getConfigurationSection("attributes." + attrId);
-        if (attrConfig == null) return;
-
-        // 3. TÍNH TOÁN GIÁ TRỊ THỰC (Để in ra message)
-        double baseH = attrConfig.getDouble("health", 0);
-        double bonusH = attrConfig.getDouble("class-bonus." + className + ".health", 0);
-        double totalPerLv = baseH + bonusH; // 2 + 4 = 6
-
-        // 4. Lưu Database
-        data.giveAttribPoints(-1);
-        plugin.getDatabaseManager().addAttributeLevel(player.getUniqueId(), attrId, 1);
-        int newLevel = plugin.getDatabaseManager().getAttributeLevel(player.getUniqueId(), attrId);
-
-
-
-        // 6. IN GIÁ TRỊ BONUS RA CHAT
-        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
-        player.sendMessage("§a§l[+] NÂNG CẤP THÀNH CÔNG!");
-        player.sendMessage("§fChỉ số gốc: §e+" + baseH + " HP");
-        if (bonusH > 0) {
-            player.sendMessage("§6§l+ Bonus Class " + className.toUpperCase() + ": §e+" + bonusH + " HP");
+        // Kiểm tra Class
+        if (isSkillAPI && !org.ThienDev.Utils.SkillAPIWrapper.hasClass(player)) {
+            player.sendMessage("§c[!] Bạn phải chọn Class (SkillAPI) trước!");
+            return;
+        } else if (isMMOCore && !org.ThienDev.Utils.MMOCoreWrapper.hasClass(player)) {
+            player.sendMessage("§c[!] Bạn phải chọn Class (MMOCore) trước!");
+            return;
         }
-        player.sendMessage("§b§l=> Tổng cộng mỗi điểm: §d+" + totalPerLv + " HP");
 
-        // Refresh GUI
-        Bukkit.getScheduler().runTask(plugin, () -> plugin.getGuiManager().openMainGui(player));
+        int finalAmount = Math.min(amount, currentAP);
+
+        // Trừ điểm dựa trên plugin
+        if (isSkillAPI) {
+            org.ThienDev.Utils.SkillAPIWrapper.givePoints(player, -finalAmount);
+        } else if (isMMOCore) {
+            org.ThienDev.Utils.MMOCoreWrapper.givePoints(player, -finalAmount);
+        }
+
+        // Cập nhật Database
+        plugin.getDatabaseManager().addAttributeLevel(player.getUniqueId(), attrId, finalAmount);
+        org.ThienDev.Api.AttributeAPI.invalidateCache(player.getUniqueId());
+
+        // Task xử lý giao diện
+        org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            try {
+                org.ThienNguyen.Listener.CacheListener.refreshCache(player);
+            } catch (Exception ignored) {}
+
+            plugin.getGuiManager().setReOpening(player.getUniqueId(), true);
+            plugin.getGuiManager().openMainGui(player, false);
+            plugin.getGuiManager().setReOpening(player.getUniqueId(), false);
+            player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
+        }, 1L);
     }
 }

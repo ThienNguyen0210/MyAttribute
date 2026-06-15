@@ -1,11 +1,37 @@
+# Ví dụ
+gui:
+  clear-inventory-on-open: true   # hoặc false
 # Định nghĩa các bộ thuộc tính
 attributes:
-  warrior_pack:
-    health: 2
-    damage: 5
+  sucmanh:
+    damage: 0.15
+  sinhmenh:
+    health: 0.4
+    armor: 0.1
     class-bonus:
       warrior:
-        health: 3
-  tanker_pack:
-    health: 10
-    damage: 1
+        health: 0.25
+        damage: 0.05
+  phapluc:
+    max_mana: 0.4
+    mana_regen: 0.01
+    magic_damage: 0.15
+    class-bonus:
+      mage:
+        max_mana: 0.15
+        magic_damage: 0.2
+  nhanhnhen:
+    movement_speed: 0.02
+    dodge_rate: 0.006
+    class-bonus:
+      archer:
+        dodge_rate: 0.002
+        critical_chance: 0.0035
+        movement_speed: 0.01
+  kheoleo:
+    critical_chance: 0.006
+    critical_damage: 0.04
+    class-bonus:
+      assassin:
+        critical_damage: 0.04
+        armor_pen: 0.02

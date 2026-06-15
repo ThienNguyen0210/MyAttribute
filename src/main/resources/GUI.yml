@@ -1,11 +1,173 @@
 menu:
-  title: "&8Chỉnh sửa thuộc tính"
-  size: 27
+  title: ":offset_-22::statspre: &bThuộc tính (&c{points}&b điểm)"
+  size: 54
   items:
-    example_item:
-      slot: 13
-      material: DIAMOND
-      name: "&bVật phẩm ví dụ"
+    '1':
+      attribute_id: "sucmanh"
+      slot: 2
+      material: PAPER
+      model: 10129
+      name: "&cSức Mạnh &7({attr_level:sucmanh} điểm)"
       lore:
-        - "&7Dòng 1"
-        - "&7Dòng 2"
+        - ""
+        - "&6[TĂNG ĐIỂM TIỀM NĂNG]"
+        - "&7Trái: &c+1 điểm"
+        - "&7Phải: &c+10 điểm"
+        - "&7Shift+Trái: &c+100 điểm"
+        - "&7Shift+Phải: &c+1000 điểm"
+        - ""
+        - "&eMỗi điểm tiềm năng cung cấp:"
+        - "&c +0.15 Sát Thương"
+    '2':
+      attribute_id: "sinhmenh"
+      slot: 6
+      material: PAPER
+      model: 10128
+      name: "&aSinh Mệnh &7({attr_level:sinhmenh} điểm)"
+      lore:
+        - ""
+        - "&6[TĂNG ĐIỂM TIỀM NĂNG]"
+        - "&7Trái: &c+1 điểm"
+        - "&7Phải: &c+10 điểm"
+        - "&7Shift+Trái: &c+100 điểm"
+        - "&7Shift+Phải: &c+1000 điểm"
+        - ""
+        - "&eMỗi điểm tiềm năng cung cấp:"
+        - "&c +0.4 Máu"
+        - "&6 +0.01 Giáp"
+      class_lore:
+        Warrior:
+          - ""
+          - "&6[TĂNG ĐIỂM TIỀM NĂNG]"
+          - "&7Trái: &c+1 điểm"
+          - "&7Phải: &c+10 điểm"
+          - "&7Shift+Trái: &c+100 điểm"
+          - "&7Shift+Phải: &c+1000 điểm"
+          - ""
+          - "&eMỗi điểm tiềm năng cung cấp:"
+          - "&c +0.4 Máu"
+          - "&6 +0.01 Giáp"
+          - "&6&l Đặc Tính Class"
+          - "&fBạn là&c Warrior&f mỗi điểm giúp bạn tăng thêm"
+          - "&a0.25 máu&f và&c 0.05 sát thương"
+    '3':
+      attribute_id: "phapluc"
+      slot: 19
+      material: PAPER
+      model: 10132
+      name: "&bPháp Lực &7({attr_level:phapluc} điểm)"
+      lore:
+        - ""
+        - "&6[TĂNG ĐIỂM TIỀM NĂNG]"
+        - "&7Trái: &c+1 điểm"
+        - "&7Phải: &c+10 điểm"
+        - "&7Shift+Trái: &c+100 điểm"
+        - "&7Shift+Phải: &c+1000 điểm"
+        - ""
+        - "&eMỗi điểm tiềm năng cung cấp:"
+        - "&b +0.4 Mana Tối Đa"
+        - "&b +0.01 Hồi mana"
+        - "&b +0.15 sức mạnh phép thuật"
+      class_lore:
+        Mage:
+          - ""
+          - "&6[TĂNG ĐIỂM TIỀM NĂNG]"
+          - "&7Trái: &c+1 điểm"
+          - "&7Phải: &c+10 điểm"
+          - "&7Shift+Trái: &c+100 điểm"
+          - "&7Shift+Phải: &c+1000 điểm"
+          - ""
+          - "&eMỗi điểm tiềm năng cung cấp:"
+          - "&c +0.4 Máu"
+          - "&6 +0.01 Giáp"
+          - "&6&l Đặc Tính Class"
+          - "&fBạn là&c Mage&f mỗi điểm giúp bạn tăng thêm"
+          - "&b0.15 mana&f và&d 0.2 sát thương phép"
+    '4':
+      attribute_id: "kheoleo"
+      slot: 25
+      material: PAPER
+      model: 10131
+      name: "&eKhéo Léo &7({attr_level:kheoleo} điểm)"
+      lore:
+        - ""
+        - "&6[TĂNG ĐIỂM TIỀM NĂNG]"
+        - "&7Trái: &c+1 điểm"
+        - "&7Phải: &c+10 điểm"
+        - "&7Shift+Trái: &c+100 điểm"
+        - "&7Shift+Phải: &c+1000 điểm"
+        - ""
+        - "&eMỗi điểm tiềm năng cung cấp:"
+        - "&a +0.006% Tỉ Lệ Chí Mạng"
+        - "&a +0.04% Sát Thương Chí Mạng"
+      class_lore:
+        Assassin:
+          - ""
+          - "&6[TĂNG ĐIỂM TIỀM NĂNG]"
+          - "&7Trái: &c+1 điểm"
+          - "&7Phải: &c+10 điểm"
+          - "&7Shift+Trái: &c+100 điểm"
+          - "&7Shift+Phải: &c+1000 điểm"
+          - ""
+          - "&eMỗi điểm tiềm năng cung cấp:"
+          - "&c +0.4 Máu"
+          - "&6 +0.01 Giáp"
+          - "&6&l Đặc Tính Class"
+          - "&fBạn là&c Assassin&f mỗi điểm giúp bạn tăng thêm"
+          - "&e0.04% sát thương chí mạng&f và&7 0.02 sát lực"
+    '5':
+      attribute_id: "nhanhnhen"
+      slot: 31
+      material: PAPER
+      model: 10130
+      name: "&fNhanh Nhẹn &7({attr_level:nhanhnhen} điểm)"
+      lore:
+        - ""
+        - "&6[TĂNG ĐIỂM TIỀM NĂNG]"
+        - "&7Trái: &c+1 điểm"
+        - "&7Phải: &c+10 điểm"
+        - "&7Shift+Trái: &c+100 điểm"
+        - "&7Shift+Phải: &c+1000 điểm"
+        - ""
+        - "&eMỗi điểm tiềm năng cung cấp:"
+        - "&6 +0.006% Né "
+        - "&a +0.02% Tốc Độ "
+      class_lore:
+        Archer:
+          - ""
+          - "&6[TĂNG ĐIỂM TIỀM NĂNG]"
+          - "&7Trái: &c+1 điểm"
+          - "&7Phải: &c+10 điểm"
+          - "&7Shift+Trái: &c+100 điểm"
+          - "&7Shift+Phải: &c+1000 điểm"
+          - ""
+          - "&eMỗi điểm tiềm năng cung cấp:"
+          - "&6 +0.006% Né "
+          - "&a +0.02% Tốc Độ "
+          - "&6&l Đặc Tính Class"
+          - "&fBạn là&c Archer&f mỗi điểm giúp bạn tăng thêm"
+          - "&f0.002% tỉ lệ né&f và&e 0.0035% tỉ lệ chí mạng"
+          - "&fvà 0.01% tốc độ"
+    info:
+      slot: 4
+      material: OAK_SIGN
+      model: 10130
+      name: "&a✦ Thông Tin Chỉ Số ✦"
+      lore:
+        - "&7[ &fChỉ Số Đã Tổng Hợp &7]"
+        - "&7Máu: &c%player_max_health_rounded%"
+        - "&7Sát thương: &c%myitem_stats_damage%"
+        - "&7Mana: &9%fabled_default_currentmaxmana%"
+        - "&7Giáp: &6%myitem_stats_armor%"
+        - "&7Né: &6%myitem_stats_dodge_rate%%"
+        - "&7Tốc độ: &a%myitem_stats_movenment_speed%%"
+        - "&7Tỉ lệ chí mạng: &a%myitem_stats_critical_chance%%"
+        - "&7Sát thương chí mạng: &a%myitem_stats_critical_damage%%"
+        - "&dSát thương kĩ năng: &f%myitem_stats_magic_damage%"
+        - ""
+        - "&7[ &fĐiểm Tiềm Năng Đã Tăng &7]"
+        - "&cSức Mạnh: &f{attr_level:sucmanh} &7điểm"
+        - "&aSinh Mệnh: &f{attr_level:sinhmenh} &7điểm"
+        - "&6Nhanh Nhẹn: &f{attr_level:nhanhnhen} &7điểm"
+        - "&eKhéo Léo: &f{attr_level:kheoleo} &7điểm"
+        - "&bPháp Lực: &f{attr_level:phapluc} &7điểm"

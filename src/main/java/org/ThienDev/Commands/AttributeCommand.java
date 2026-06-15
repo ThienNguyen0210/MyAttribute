@@ -1,13 +1,16 @@
 package org.ThienDev.Commands;
 
+import org.ThienDev.Api.AttributeAPI;
 import org.ThienDev.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class AttributeCommand implements CommandExecutor {
+
     private final Main plugin;
 
     public AttributeCommand(Main plugin) {
@@ -17,89 +20,99 @@ public class AttributeCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        // 1. Nếu không nhập gì (/attr), mở GUI cho người chơi
+        // /attr — mở GUI cho người chơi
         if (args.length == 0) {
-            if (!(sender instanceof Player player)) {
-                sender.sendMessage("§cChỉ người chơi mới có thể mở giao diện!");
+            if (!(sender instanceof Player)) {
+                sender.sendMessage("§cConsole không mở được GUI! Dùng: /attr stats <player> <stats> <value> <second>");
                 return true;
             }
-            plugin.getGuiManager().openMainGui(player);
+            plugin.getGuiManager().openMainGui((Player) sender);
             return true;
         }
 
-        // 2. Lệnh /attr reload
-        if (args[0].equalsIgnoreCase("reload")) {
-            if (!sender.hasPermission("myattribute.admin")) {
-                sender.sendMessage("§cBạn không có quyền thực hiện lệnh này!");
-                return true;
-            }
-            plugin.getGuiManager().reloadConfig();
-            sender.sendMessage("§a[MyAttribute] Đã tải lại cấu hình GUI.yml!");
-            return true;
-        }
+        // /attr stats <player> <stats> <value> <second>
+        if (args[0].equalsIgnoreCase("stats")) {
 
-// 3. Lệnh /attr reset <player>
-        if (args[0].equalsIgnoreCase("reset")) {
-            if (!sender.hasPermission("myattribute.admin")) {
-                sender.sendMessage("§cBạn không có quyền thực hiện lệnh này!");
+            if (sender instanceof Player && !sender.hasPermission("myattribute.stats")) {
+                sender.sendMessage("§cBạn không có quyền dùng lệnh này!");
                 return true;
             }
 
-            if (args.length < 2) {
-                sender.sendMessage("§cSử dụng: /attr reset <tên_người_chơi>");
+            if (args.length < 5) {
+                sender.sendMessage("§eUsage: /attr stats <player> <stats> <value> <second>");
                 return true;
             }
 
-            Player target = Bukkit.getPlayer(args[1]);
+            String targetName = args[1];
+            String statName   = args[2];
+            String rawValue   = args[3];
+            boolean isPercent = rawValue.endsWith("%");
+            double value;
+            int seconds;
+
+            try {
+                value = Double.parseDouble(isPercent ? rawValue.replace("%", "") : rawValue);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("§c<value> phải là số! Ví dụ: 10 hoặc 10% hoặc 10.5");
+                return true;
+            }
+
+            try {
+                seconds = Integer.parseInt(args[4]);
+                if (seconds <= 0) throw new NumberFormatException();
+            } catch (NumberFormatException e) {
+                sender.sendMessage("§c<second> phải là số nguyên dương! Ví dụ: 30");
+                return true;
+            }
+
+            Player target = Bukkit.getPlayerExact(targetName);
             if (target == null) {
-                sender.sendMessage("§cNgười chơi này không online!");
+                sender.sendMessage("§cKhông tìm thấy người chơi §e" + targetName + " §ctrên server!");
                 return true;
             }
 
-            // --- BẮT ĐẦU QUY TRÌNH HOÀN ĐIỂM ---
-
-            // Bước 1: Tính toán tổng điểm đã nâng từ Database SQLite của bạn
-            // Giả sử mỗi Level bạn tốn 1 điểm AP (Attribute Point).
-            // Nếu config của bạn tốn nhiều hơn, hãy nhân với hệ số đó.
-            int totalPointsToRefund = 0;
-
-            // Bạn cần tạo hàm này trong DatabaseManager để SUM(level) của UUID đó
-            // Ví dụ: SELECT SUM(level) FROM player_attributes WHERE uuid = ?
-            totalPointsToRefund = plugin.getDatabaseManager().getTotalLevels(target.getUniqueId());
-
-            // Bước 2: Tác động vào Fabled/SkillAPI
-            if (Bukkit.getPluginManager().isPluginEnabled("Fabled") || Bukkit.getPluginManager().isPluginEnabled("SkillAPI")) {
-                try {
-                    com.sucy.skill.api.player.PlayerData data = com.sucy.skill.SkillAPI.getPlayerData(target);
-                    if (data != null) {
-                        // Xóa các điểm đã cộng trong bảng thuộc tính của Fabled
-                        data.refundAttributes();
-
-                        // Cộng lại số điểm AP dựa trên dữ liệu Database SQLite mà mình vừa tính được
-                        if (totalPointsToRefund > 0) {
-                            // Dùng hàm này từ stub bạn gửi: public void giveAttribPoints(int amount)
-                            data.giveAttribPoints(totalPointsToRefund);
-                        }
-
-                        // Cập nhật lại chỉ số máu, mana, tốc độ chạy ngay lập tức
-                        data.updatePlayerStat(target);
-
-                        target.sendMessage("§a[Fabled] §fĐã thu hồi và hoàn trả §e" + totalPointsToRefund + " §fđiểm tiềm năng.");
-                    }
-                } catch (Exception e) {
-                    plugin.getLogger().warning("Lỗi hoàn điểm Fabled: " + e.getMessage());
-                }
+            // 1. Cộng bonus vào RAM
+            if (isPercent) {
+                AttributeAPI.addTempPercentBonus(target.getUniqueId(), statName, value);
+            } else {
+                AttributeAPI.addTempBonus(target.getUniqueId(), statName, value);
             }
 
-            // Bước 3: Reset Database SQLite về 0
-            plugin.getDatabaseManager().resetAttributes(target.getUniqueId());
-            target.sendMessage("§e[MyAttribute] §fToàn bộ chỉ số đã được reset về mặc định!");
-            sender.sendMessage("§aĐã reset và hoàn điểm thành công cho §f" + target.getName());
+            // 2. Xoá bonusCache TRƯỚC khi refreshCache
+            AttributeAPI.invalidateCache(target.getUniqueId());
+
+            // 3. refreshCache để PlayerCombatCache cập nhật stats mới
+            org.ThienNguyen.Listener.CacheListener.refreshCache(target);
+
+            String displayVal = isPercent ? value + "%" : String.valueOf(value);
+
+
+            // Tự động xoá buff sau <seconds> giây
+            final double finalValue = value;
+            final boolean finalIsPercent = isPercent;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    // 1. Xoá bonus
+                    if (finalIsPercent) {
+                        AttributeAPI.removeTempPercentBonus(target.getUniqueId(), statName, finalValue);
+                    } else {
+                        AttributeAPI.removeTempBonus(target.getUniqueId(), statName, finalValue);
+                    }
+
+                    // 2. Xoá bonusCache TRƯỚC khi refreshCache
+                    AttributeAPI.invalidateCache(target.getUniqueId());
+
+                    // 3. refreshCache
+                    if (target.isOnline()) {
+                        org.ThienNguyen.Listener.CacheListener.refreshCache(target);
+                    }
+                }
+            }.runTaskLater(plugin, (long) seconds * 20L);
+
             return true;
         }
 
-        // Nếu gõ lệnh lạ (ví dụ /attr abc)
-        sender.sendMessage("§c[MyAttribute] Lệnh không tồn tại. Dùng /attr để mở Menu.");
         return true;
     }
 }
