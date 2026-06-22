@@ -2,6 +2,8 @@ package org.ThienDev.Commands;
 
 import org.ThienDev.Api.AttributeAPI;
 import org.ThienDev.Main;
+import org.ThienDev.Utils.MMOCoreWrapper;
+import org.ThienDev.Utils.SkillAPIWrapper;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -109,6 +111,64 @@ public class AttributeCommand implements CommandExecutor {
                     }
                 }
             }.runTaskLater(plugin, (long) seconds * 20L);
+
+            return true;
+        }
+
+        // /attr reset <player>
+        if (args[0].equalsIgnoreCase("reset")) {
+
+            if (sender instanceof Player && !sender.hasPermission("myattribute.reset")) {
+                sender.sendMessage("§cBạn không có quyền dùng lệnh này!");
+                return true;
+            }
+
+            if (args.length < 2) {
+                sender.sendMessage("§eUsage: /attr reset <player>");
+                return true;
+            }
+
+            Player target = Bukkit.getPlayerExact(args[1]);
+            if (target == null) {
+                sender.sendMessage("§cKhông tìm thấy người chơi §e" + args[1] + " §ctrên server!");
+                return true;
+            }
+
+            // 1. Lấy tổng số điểm đã dùng TRƯỚC khi reset
+            int usedPoints = plugin.getDatabaseManager().getTotalLevels(target.getUniqueId());
+
+            // 2. Reset toàn bộ attribute trong database
+            plugin.getDatabaseManager().resetAttributes(target.getUniqueId());
+
+            // 3. Hoàn điểm lại cho player qua SkillAPI hoặc MMOCore
+            if (usedPoints > 0) {
+                if (Bukkit.getPluginManager().isPluginEnabled("SkillAPI")) {
+                    try {
+                        SkillAPIWrapper.givePoints(target, usedPoints);
+                    } catch (Throwable t) {
+                        plugin.getLogger().warning("Lỗi hoàn điểm SkillAPI cho " + target.getName() + ": " + t.getMessage());
+                    }
+                } else if (Bukkit.getPluginManager().isPluginEnabled("MMOCore")) {
+                    try {
+                        MMOCoreWrapper.givePoints(target, usedPoints);
+                    } catch (Throwable t) {
+                        plugin.getLogger().warning("Lỗi hoàn điểm MMOCore cho " + target.getName() + ": " + t.getMessage());
+                    }
+                }
+            }
+
+            // 4. Xoá cache để stat được tính lại từ đầu
+            AttributeAPI.invalidateCache(target.getUniqueId());
+
+            // 5. Refresh PlayerCombatCache nếu đang dùng
+            try {
+                org.ThienNguyen.Listener.CacheListener.refreshCache(target);
+            } catch (Throwable ignored) {}
+
+            target.sendMessage("§aToàn bộ attribute của bạn đã được reset. Bạn nhận lại §e" + usedPoints + " §ađiểm!");
+            if (!sender.equals(target)) {
+                sender.sendMessage("§aĐã reset attribute của §e" + target.getName() + "§a. Hoàn lại §e" + usedPoints + " §ađiểm.");
+            }
 
             return true;
         }
