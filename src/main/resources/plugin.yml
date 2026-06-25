@@ -2,7 +2,7 @@ name: MyAttribute
 version: 1.0-SNAPSHOT
 main: org.ThienDev.Main
 api-version: 1.21
-author: ThienNguyen
+author: Thiện Dev
 description: Plugin quan ly thuoc tinh ho tro 1.21 va hook Fabled.
 commands:
   MyAttribute:

@@ -20,6 +20,14 @@ public class AttributeAPI {
     // Hoàn toàn tách biệt với DB, dùng cho /attr stats tạm thời
     private static final Map<UUID, Map<String, Double>> tempBonus = new ConcurrentHashMap<>();
 
+    // Permanent stats: load từ DB (player_perm_stats) vào RAM khi join/respawn.
+    // Cộng/trừ qua lệnh /attr permstats, lưu DB vĩnh viễn.
+    private static final Map<UUID, Map<String, Double>> permBonus = new ConcurrentHashMap<>();
+
+    // Permanent percent stats: load từ DB (player_perm_percent_stats) vào RAM khi join/respawn.
+    // Cộng/trừ qua lệnh /attr permstats <player> <stat> <value%>, lưu DB vĩnh viễn.
+    private static final Map<UUID, Map<String, Double>> permPercentBonus = new ConcurrentHashMap<>();
+
     // -------------------------------------------------------
     //  PUBLIC API
     // -------------------------------------------------------
@@ -29,10 +37,13 @@ public class AttributeAPI {
      * Đây là hàm bạn gọi trong damage event, skill event, v.v.
      */
     public static double getPercentBonus(UUID uuid, String statName) {
-        return tempPercentBonus
+        double fromTemp = tempPercentBonus
                 .getOrDefault(uuid, Map.of())
                 .getOrDefault(statName, 0.0);
-        // Nếu sau này muốn tính % từ DB pack cũng đưa vào đây
+        double fromPerm = permPercentBonus
+                .getOrDefault(uuid, Map.of())
+                .getOrDefault(statName, 0.0);
+        return fromTemp + fromPerm;
     }
     public static void addTempPercentBonus(UUID uuid, String statName, double percent) {
         tempPercentBonus
@@ -60,7 +71,11 @@ public class AttributeAPI {
                 .getOrDefault(uuid, Map.of())
                 .getOrDefault(statName, 0.0);
 
-        return fromPack + fromTemp;
+        double fromPerm = permBonus
+                .getOrDefault(uuid, Map.of())
+                .getOrDefault(statName, 0.0);
+
+        return fromPack + fromTemp + fromPerm;
     }
 
     // -------------------------------------------------------
@@ -98,6 +113,68 @@ public class AttributeAPI {
         tempBonus.remove(uuid);
         tempPercentBonus.remove(uuid);
 
+    }
+
+    // -------------------------------------------------------
+    //  PERMANENT BONUS (RAM cache load từ DB - dành cho /attr permstats)
+    // -------------------------------------------------------
+
+    /**
+     * Set giá trị permanent bonus trong RAM (đồng bộ với DB sau khi DatabaseManager
+     * đã ghi). Gọi sau mỗi lần addPermStat/clearPermStat ở DB để RAM luôn khớp DB,
+     * KHÔNG cần đọc lại DB mỗi lần (tránh query liên tục trong damage event).
+     */
+    public static void setPermBonus(UUID uuid, String statName, double value) {
+        Map<String, Double> stats = permBonus.computeIfAbsent(uuid, k -> new ConcurrentHashMap<>());
+        if (value == 0.0) {
+            stats.remove(statName);
+            if (stats.isEmpty()) permBonus.remove(uuid);
+        } else {
+            stats.put(statName, value);
+        }
+    }
+
+    /**
+     * Nạp toàn bộ permanent stats của 1 player từ DB vào RAM.
+     * Gọi lúc PlayerJoinEvent. Ghi đè toàn bộ map cũ của uuid đó (nếu có).
+     */
+    public static void loadPermBonus(UUID uuid, Map<String, Double> statsFromDb) {
+        if (statsFromDb == null || statsFromDb.isEmpty()) {
+            permBonus.remove(uuid);
+            return;
+        }
+        permBonus.put(uuid, new ConcurrentHashMap<>(statsFromDb));
+    }
+
+    // -------------------------------------------------------
+    //  PERMANENT PERCENT BONUS (RAM cache load từ DB - dành cho /attr permstats <value%>)
+    // -------------------------------------------------------
+
+    public static void setPermPercentBonus(UUID uuid, String statName, double value) {
+        Map<String, Double> stats = permPercentBonus.computeIfAbsent(uuid, k -> new ConcurrentHashMap<>());
+        if (value == 0.0) {
+            stats.remove(statName);
+            if (stats.isEmpty()) permPercentBonus.remove(uuid);
+        } else {
+            stats.put(statName, value);
+        }
+    }
+
+    public static void loadPermPercentBonus(UUID uuid, Map<String, Double> statsFromDb) {
+        if (statsFromDb == null || statsFromDb.isEmpty()) {
+            permPercentBonus.remove(uuid);
+            return;
+        }
+        permPercentBonus.put(uuid, new ConcurrentHashMap<>(statsFromDb));
+    }
+
+    /**
+     * Xoá toàn bộ permanent bonus của player khỏi RAM (ví dụ lúc logout, tránh leak memory).
+     * KHÔNG đụng tới DB - chỉ dọn RAM.
+     */
+    public static void unloadPermBonus(UUID uuid) {
+        permBonus.remove(uuid);
+        permPercentBonus.remove(uuid);
     }
 
     // -------------------------------------------------------

@@ -1,0 +1,33 @@
+# ============================================================
+#  lang.yml — MyAttribute
+#  Hỗ trợ mã màu &  |  Placeholder dạng {tên}
+# ============================================================
+
+# --- Chung ---
+no-permission: "&cBạn không có quyền dùng lệnh này!"
+console-only-text: "&cConsole không mở được GUI! Dùng: /attr stats <player> <stats> <value> <second>"
+player-not-found: "&cKhông tìm thấy người chơi &e{player} &ctrên server!"
+
+# --- /attr stats ---
+stats-usage: "&eUsage: /attr stats <player> <stats> <value> <second>"
+stats-invalid-value: "&c<value> phải là số! Ví dụ: 10 hoặc 10% hoặc 10.5"
+stats-invalid-second: "&c<second> phải là số nguyên dương! Ví dụ: 30"
+
+# --- /attr reset ---
+reset-usage: "&eUsage: /attr reset <player>"
+reset-success-target: "&aToàn bộ attribute của bạn đã được reset. Bạn nhận lại &e{points} &ađiểm!"
+reset-success-sender: "&aĐã reset attribute của &e{player}&a. Hoàn lại &e{points} &ađiểm."
+
+# --- /attr permstats ---
+permstats-usage: "&eUsage: /attr permstats <player> <stat> <value>"
+permstats-usage-hint: "&7Ví dụ: /attr permstats Thien damage 50  (hoặc -20 để trừ, hoặc 10% để %)"
+permstats-invalid-value: "&c<value> phải là số! Ví dụ: 50 hoặc -20 hoặc 12.5 hoặc 10%"
+# {sign_value} = "+50" hoặc "-10" hoặc "+10%"   {stat} = tên stat   {player} = tên player   {total} = tổng hiện tại (có thể có %)
+permstats-success-sender: "&aĐã {sign_value} &evĩnh viễn &acho stat &e{stat} &acủa &e{player}&a. Tổng hiện tại: &e{total}"
+permstats-success-target: "&aStat &e{stat} &acủa bạn được {sign_value} &avĩnh viễn. Tổng hiện tại: &e{total}"
+
+# --- /attr clearperm ---
+clearperm-usage: "&eUsage: /attr clearperm <player> <stat>"
+# {stat} = tên stat   {player} = tên player
+clearperm-success-sender: "&aĐã xoá permanent stat (flat + %) &e{stat} &acủa &e{player}"
+clearperm-success-target: "&ePermanent stat &e{stat} &e(flat + %) của bạn đã bị xoá."
